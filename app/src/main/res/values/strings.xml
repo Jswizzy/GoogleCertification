@@ -3,4 +3,7 @@
     <string name="droid">Droid</string>
     <string name="custom_toast_text">This is a custom toast</string>
     <string name="undo_action">Undo</string>
+    <string name="channel_id">1</string>
+    <string name="example">Example</string>
+    <string name="hello_world">Hello World!</string>
 </resources>

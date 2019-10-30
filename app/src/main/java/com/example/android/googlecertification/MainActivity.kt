@@ -1,7 +1,9 @@
 package com.example.android.googlecertification
 
+import android.app.PendingIntent
+import android.content.Intent
+import android.os.Build
 import android.os.Bundle
-import android.util.Log
 import android.view.Gravity
 import android.view.View
 import android.widget.Button
@@ -9,10 +11,11 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.coordinatorlayout.widget.CoordinatorLayout
+import androidx.core.app.NotificationCompat
+import androidx.core.app.TaskStackBuilder
+import com.github.ajalt.timberkt.Timber
 import com.google.android.material.snackbar.Snackbar
 
-
-private val TAG = MainActivity::class.java.simpleName
 
 class MainActivity : AppCompatActivity() {
 
@@ -20,10 +23,19 @@ class MainActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
         setContentView(R.layout.activity_main)
 
-        coordinatorLayout = findViewById(R.id.coordinatorLayout)
+        assignViews()
 
+        setupOnClickListeners()
+    }
+
+    private fun assignViews() {
+        coordinatorLayout = findViewById(R.id.coordinatorLayout)
+    }
+
+    private fun setupOnClickListeners() {
         val toastButton: Button = findViewById(R.id.toastButton)
         toastButton.setOnClickListener {
             displayToast()
@@ -32,6 +44,11 @@ class MainActivity : AppCompatActivity() {
         val snackbarButton: Button = findViewById(R.id.SnackbarButton)
         snackbarButton.setOnClickListener {
             displaySnackbar()
+        }
+
+        val notificationButton: Button = findViewById(R.id.notificationButton)
+        notificationButton.setOnClickListener {
+            displayNotification()
         }
     }
 
@@ -54,8 +71,45 @@ class MainActivity : AppCompatActivity() {
 
     private fun displaySnackbar() {
 
-        Snackbar.make(coordinatorLayout, getText(R.string.custom_toast_text), Snackbar.LENGTH_SHORT).apply {
-            setAction(getString(R.string.undo_action)) { Log.d(TAG, "Undo") }
-        }.show()
+        Snackbar.make(coordinatorLayout, getText(R.string.custom_toast_text), Snackbar.LENGTH_SHORT)
+            .apply {
+                setAction(getString(R.string.undo_action)) { Timber.d { "Undo" } }
+            }.show()
+    }
+
+    private fun displayNotification() {
+
+        val channelId = getString(R.string.channel_id)
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            createNotificationChannel(
+                context = this,
+                name = getString(R.string.example),
+                channelId = channelId,
+                descriptionText = null
+            )
+        }
+
+        val intent = Intent(this, ResultActivity::class.java)
+
+        val pendingIntent = TaskStackBuilder.create(this).run {
+            addNextIntentWithParentStack(intent)
+            getPendingIntent(0, PendingIntent.FLAG_UPDATE_CURRENT)
+        }
+
+        val notification =
+            createNotificationBuilder(
+                context = this,
+                channelId = channelId,
+                smallIcon = R.drawable.droid,
+                title = getString(R.string.example),
+                text = getString(R.string.hello_world)
+            ).apply {
+                setCategory(NotificationCompat.CATEGORY_MESSAGE)
+                setContentIntent(pendingIntent)
+                setAutoCancel(true)
+            }.build()
+
+        showNotification(this, channelId.toInt(), notification)
     }
 }
